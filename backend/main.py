@@ -24,6 +24,24 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# --- Health Check Server for Railway ---
+from flask import Flask
+import threading
+
+app = Flask(__name__)
+
+@app.route("/")
+@app.route("/health")
+def health():
+    return "Agent running", 200
+
+def run_health_server():
+    port = int(os.getenv("PORT", 8080))
+    logger.info(f"Starting health check server on port {port}")
+    # Disable reloader/debugger to avoid signal interference
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
+# ---------------------------------------
 
 async def entrypoint(ctx: JobContext):
     """Entry point for LiveKit agent jobs"""
@@ -62,6 +80,9 @@ def prewarm(proc):
 
 
 if __name__ == "__main__":
+    # Start health check server in background thread
+    threading.Thread(target=run_health_server, daemon=True).start()
+    
     cli.run_app(
         WorkerOptions(
             entrypoint_fnc=entrypoint,
