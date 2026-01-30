@@ -171,7 +171,7 @@ function VoiceCall() {
         },
         body: JSON.stringify({
           roomName,
-          participantName: 'user',
+          participantName: `user-${Math.floor(Math.random() * 100000)}`,
         }),
       })
       
